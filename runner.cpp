@@ -46,6 +46,13 @@ int main(int argc, char *argv[])
     std::string targetFile = "target.xyz";
     std::string outputFile = "icp_result";
 
+    // Print help message if no arguments are provided
+    if (argc == 1)
+    {
+        std::cout << "Usage: " << argv[0] << " [-s source.xyz] [-t target.xyz] [-o output_prefix]" << std::endl;
+        return 0;
+    }
+
     // Parse command line arguments
     for (int i = 1; i < argc; i++)
     {
@@ -84,11 +91,11 @@ int main(int argc, char *argv[])
 
     // Set up ICP parameters
     ICP::Parameters params;
-    params.maxIterations = 10;
+    params.maxIterations = 6;
     params.convergenceThreshold = 1e-6;
     params.outlierRejectionThreshold = 0.1; // Reject outliers further than 0.1 units
     params.outputFilePrefix = outputFile;   // Set output file prefix for ICP
-    params.saveInterval = 5;                // Save intermediate files every 5 iterations
+    params.saveInterval = 2;                // Save intermediate files every 5 iterations
 
     // Run ICP algorithm - it will generate intermediate files internally
     Eigen::Matrix4d finalTransform = ICP::align(source, target, params);
@@ -97,9 +104,9 @@ int main(int argc, char *argv[])
     std::cout << finalTransform << std::endl;
 
     std::cout << "\nPoint cloud files saved:" << std::endl;
-    std::cout << "- Initial state: " << outputFile << "_initial.xyz" << std::endl;
-    std::cout << "- Iteration files: " << outputFile << "_iter*.xyz" << std::endl;
-    std::cout << "- Final aligned result: " << outputFile << "_final.xyz" << std::endl;
+    std::cout << "- Initial state: " << outputFile << "_initial.xyzrgb" << std::endl;
+    std::cout << "- Iteration files: " << outputFile << "_iter*.xyzrgb" << std::endl;
+    std::cout << "- Final aligned result: " << outputFile << "_final.xyzrgb" << std::endl;
     std::cout << "- Aligned source only (green): " << outputFile << "_aligned.xyz" << std::endl;
     std::cout << "\nTarget is blue, source is red, aligned source is green." << std::endl;
 

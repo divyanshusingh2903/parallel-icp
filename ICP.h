@@ -7,6 +7,8 @@
 #include <limits>
 #include <iostream>
 #include <string>
+#include <fstream>
+#include <iomanip>
 
 class ICP
 {

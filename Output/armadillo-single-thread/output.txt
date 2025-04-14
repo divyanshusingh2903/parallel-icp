@@ -1,0 +1,27 @@
+./icp_single_thread -s ./Data/armadillo-source.xyz -t ./Data/armadillo-target.xyz -o armadillo-output
+Loaded 32385 points from ./Data/armadillo-source.xyz
+Loaded 29885 points from ./Data/armadillo-target.xyz
+Iteration 1, Error: 0.000314554, Improvement: 1.79769e+308
+Iteration 2, Error: 0.000217395, Improvement: 9.7159e-05
+Iteration 3, Error: 0.000111996, Improvement: 0.000105399
+Iteration 4, Error: 5.23383e-05, Improvement: 5.96575e-05
+Iteration 5, Error: 3.31756e-05, Improvement: 1.91626e-05
+Iteration 6, Error: 2.35394e-05, Improvement: 9.63627e-06
+Final transformation matrix:
+    0.883496    0.0328752    -0.467283 -0.000576277
+  -0.0235772     0.999391    0.0257335  -0.00210402
+    0.467844   -0.0117182     0.883733   0.00167841
+           0            0            0            1
+
+Point cloud files saved:
+- Initial state: armadillo-output_initial.xyzrgb
+- Iteration files: armadillo-output_iter*.xyzrgb
+- Final aligned result: armadillo-output_final.xyzrgb
+- Aligned source only (green): armadillo-output_aligned.xyz
+
+Target is blue, source is red, aligned source is green.
+
+
+
+
+59s 602ms

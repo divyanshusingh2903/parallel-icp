@@ -1,6 +1,4 @@
 #include "ICP.h"
-#include <fstream>
-#include <iomanip>
 
 Eigen::Matrix4d ICP::align(const PointCloud &source, const PointCloud &target, const Parameters &params)
 {
@@ -13,7 +11,7 @@ Eigen::Matrix4d ICP::align(const PointCloud &source, const PointCloud &target, c
     // Save initial state if output prefix is provided
     if (!params.outputFilePrefix.empty())
     {
-        saveColoredPointClouds(target, transformedSource, params.outputFilePrefix + "_initial.xyz");
+        saveColoredPointClouds(target, transformedSource, params.outputFilePrefix + "_initial.xyzrgb");
     }
 
     double prevError = std::numeric_limits<double>::max();
@@ -47,7 +45,7 @@ Eigen::Matrix4d ICP::align(const PointCloud &source, const PointCloud &target, c
             (iter % params.saveInterval == 0 || iter == params.maxIterations - 1))
         {
             saveColoredPointClouds(target, transformedSource,
-                                   params.outputFilePrefix + "_iter" + std::to_string(iter + 1) + ".xyz");
+                                   params.outputFilePrefix + "_iter" + std::to_string(iter + 1) + ".xyzrgb");
         }
 
         // 6. Check for convergence
@@ -69,14 +67,14 @@ Eigen::Matrix4d ICP::align(const PointCloud &source, const PointCloud &target, c
     {
         PointCloud finalSource = source;
         finalSource.transform(transformation);
-        saveColoredPointClouds(target, finalSource, params.outputFilePrefix + "_final.xyz");
+        saveColoredPointClouds(target, finalSource, params.outputFilePrefix + "_final.xyzrgb");
 
         // Save aligned source separately (green color)
-        std::ofstream alignedFile(params.outputFilePrefix + "_aligned.xyz");
+        std::ofstream alignedFile(params.outputFilePrefix + "_aligned.xyzrgb");
         alignedFile << std::fixed << std::setprecision(6);
         for (const auto &p : finalSource.points)
         {
-            alignedFile << p.x << " " << p.y << " " << p.z << " 0 1 0" << std::endl;
+            alignedFile << p.x << " " << p.y << " " << p.z << " 66 245 66" << std::endl; // Green
         }
         alignedFile.close();
     }
@@ -179,13 +177,13 @@ void ICP::saveColoredPointClouds(const PointCloud &target, const PointCloud &sou
     // Write target points (blue)
     for (const auto &p : target.points)
     {
-        file << p.x << " " << p.y << " " << p.z << " 0 0 1" << std::endl;
+        file << p.x << " " << p.y << " " << p.z << " 66 132 245" << std::endl; // Blue
     }
 
     // Write source points (red)
     for (const auto &p : source.points)
     {
-        file << p.x << " " << p.y << " " << p.z << " 1 0 0" << std::endl;
+        file << p.x << " " << p.y << " " << p.z << " 245 66 66" << std::endl; // Red
     }
 
     file.close();
