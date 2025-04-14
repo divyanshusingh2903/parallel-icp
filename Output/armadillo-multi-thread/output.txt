@@ -1,0 +1,35 @@
+mpirun -np 4 icp_mpi -s ./Data/armadillo-source.xyz -t ./Data/armadillo-target.xyz -o armadillo-mpi
+
+Running Parallel ICP with 4 processes
+ICP Parameters:
+  Source file: ./Data/armadillo-source.xyz
+  Target file: ./Data/armadillo-target.xyz
+  Output prefix: armadillo-mpi
+  Max iterations: 5
+  Convergence threshold: 1e-06
+  Outlier rejection threshold: 0.1
+  Save interval: 1
+
+Loaded 32385 points from ./Data/armadillo-source.xyz
+Loaded 29885 points from ./Data/armadillo-target.xyz
+Iteration 1, Error: 0.000217395, Change: 1.79769e+308, Transform Diff: 0.233546
+Iteration 2, Error: 0.000111996, Change: 0.000105399, Transform Diff: 0.231696
+Iteration 3, Error: 5.23383e-05, Change: 5.96575e-05, Transform Diff: 0.133615
+Iteration 4, Error: 3.31756e-05, Change: 1.91626e-05, Transform Diff: 0.061822
+Iteration 5, Error: 2.35394e-05, Change: 9.63627e-06, Transform Diff: 0.0280512
+
+Final transformation matrix:
+ 0.889028  0.038425 -0.456238  0.000009
+-0.028020  0.999170  0.029552 -0.002183
+ 0.456995 -0.013489  0.889367  0.001421
+ 0.000000  0.000000  0.000000  1.000000
+
+Point cloud files saved:
+- Initial state: armadillo-mpi_initial.xyzrgb
+- Iteration files: armadillo-mpi_iter*.xyzrgb
+- Final aligned result: armadillo-mpi_final.xyzrgb
+- Aligned source only (green): armadillo-mpi_aligned.xyz
+
+Target is blue, source is red, aligned source is green.
+
+Execution time: 192.308776 seconds

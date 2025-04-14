@@ -41,6 +41,21 @@ PointCloud loadXYZFile(const std::string &filename)
     return cloud;
 }
 
+void printUsage(const char *programName)
+{
+    std::cout << "Usage: " << programName << " [-s source.xyz] [-t target.xyz] [-o output_prefix] "
+              << "[-i max_iterations] [-c convergence_threshold] [-r outlier_threshold] [-v save_interval]" << std::endl;
+    std::cout << "\nOptions:" << std::endl;
+    std::cout << "  -s  Source point cloud file (default: source.xyz)" << std::endl;
+    std::cout << "  -t  Target point cloud file (default: target.xyz)" << std::endl;
+    std::cout << "  -o  Output file prefix (default: picp_result)" << std::endl;
+    std::cout << "  -i  Maximum number of iterations (default: 6)" << std::endl;
+    std::cout << "  -c  Convergence threshold (default: 1e-6)" << std::endl;
+    std::cout << "  -r  Outlier rejection threshold (default: 0.1)" << std::endl;
+    std::cout << "  -v  Save interval for intermediate results (default: 2)" << std::endl;
+    std::cout << "  -h  Display this help message" << std::endl;
+}
+
 int main(int argc, char *argv[])
 {
     // Initialize MPI
@@ -50,20 +65,21 @@ int main(int argc, char *argv[])
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &size);
 
-    // Default file names
+    // Default file names and parameters
     std::string sourceFile = "source.xyz";
     std::string targetFile = "target.xyz";
     std::string outputFile = "picp_result";
-    int maxIterations = 50;
-    double convergenceThreshold = 1e-5;
+    int maxIterations = 5;
+    double convergenceThreshold = 1e-6;
     double outlierThreshold = 0.1;
-    int saveInterval = 5;
+    int saveInterval = 1;
 
-    // Only root process prints help and parses arguments
+    // Only root process prints help if no arguments
     if (rank == 0 && argc == 1)
     {
-        std::cout << "Usage: " << argv[0] << " [-s source.xyz] [-t target.xyz] [-o output_prefix] "
-                  << "[-i max_iterations] [-c convergence_threshold] [-r outlier_threshold] [-v save_interval]" << std::endl;
+        printUsage(argv[0]);
+        MPI_Finalize();
+        return 0;
     }
 
     // Parse command line arguments
@@ -109,8 +125,7 @@ int main(int argc, char *argv[])
         {
             if (rank == 0)
             {
-                std::cout << "Usage: " << argv[0] << " [-s source.xyz] [-t target.xyz] [-o output_prefix] "
-                          << "[-i max_iterations] [-c convergence_threshold] [-r outlier_threshold] [-v save_interval]" << std::endl;
+                printUsage(argv[0]);
             }
             MPI_Finalize();
             return 0;
@@ -119,14 +134,16 @@ int main(int argc, char *argv[])
 
     if (rank == 0)
     {
-        std::cout << "Running Parallel ICP with " << size << " processes" << std::endl;
-        std::cout << "Source file: " << sourceFile << std::endl;
-        std::cout << "Target file: " << targetFile << std::endl;
-        std::cout << "Output prefix: " << outputFile << std::endl;
-        std::cout << "Max iterations: " << maxIterations << std::endl;
-        std::cout << "Convergence threshold: " << convergenceThreshold << std::endl;
-        std::cout << "Outlier threshold: " << outlierThreshold << std::endl;
-        std::cout << "Save interval: " << saveInterval << std::endl;
+        std::cout << "\nRunning Parallel ICP with " << size << " processes" << std::endl;
+        std::cout << "ICP Parameters:" << std::endl;
+        std::cout << "  Source file: " << sourceFile << std::endl;
+        std::cout << "  Target file: " << targetFile << std::endl;
+        std::cout << "  Output prefix: " << outputFile << std::endl;
+        std::cout << "  Max iterations: " << maxIterations << std::endl;
+        std::cout << "  Convergence threshold: " << convergenceThreshold << std::endl;
+        std::cout << "  Outlier rejection threshold: " << outlierThreshold << std::endl;
+        std::cout << "  Save interval: " << saveInterval << std::endl;
+        std::cout << std::endl;
     }
 
     // Ensure all processes use the same parameters
@@ -139,8 +156,6 @@ int main(int argc, char *argv[])
     MPI_Bcast(&saveInterval, 1, MPI_INT, 0, MPI_COMM_WORLD);
 
     // All processes load point clouds
-    // Note: In a real-world application with large point clouds, you might want to distribute this
-    // by having the root process load and broadcast the data
     PointCloud source = loadXYZFile(sourceFile);
     PointCloud target = loadXYZFile(targetFile);
 
@@ -176,15 +191,13 @@ int main(int argc, char *argv[])
 
     // Stop timer
     auto endTime = std::chrono::high_resolution_clock::now();
-    auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime).count();
+    std::chrono::duration<double> elapsedSeconds = endTime - startTime;
 
     // Only the root process should report results
     if (rank == 0)
     {
-        std::cout << "\nParallel ICP completed in " << duration << " ms." << std::endl;
-        std::cout << "Final transformation matrix:" << std::endl;
-        std::cout << std::fixed << std::setprecision(6);
-        std::cout << finalTransform << std::endl;
+        std::cout << "\nFinal transformation matrix:" << std::endl;
+        std::cout << std::fixed << std::setprecision(6) << finalTransform << std::endl;
 
         std::cout << "\nPoint cloud files saved:" << std::endl;
         std::cout << "- Initial state: " << outputFile << "_initial.xyzrgb" << std::endl;
@@ -192,6 +205,9 @@ int main(int argc, char *argv[])
         std::cout << "- Final aligned result: " << outputFile << "_final.xyzrgb" << std::endl;
         std::cout << "- Aligned source only (green): " << outputFile << "_aligned.xyz" << std::endl;
         std::cout << "\nTarget is blue, source is red, aligned source is green." << std::endl;
+
+        // Display timing information
+        std::cout << "\nExecution time: " << elapsedSeconds.count() << " seconds" << std::endl;
     }
 
     // Finalize MPI

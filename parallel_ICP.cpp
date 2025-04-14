@@ -2,6 +2,12 @@
 
 Eigen::Matrix4d ParallelICP::align(PointCloud &source, const PointCloud &target, const Parameters &params)
 {
+    // Save initial state if output prefix is provided
+    if (!params.outputFilePrefix.empty())
+    {
+        saveColoredPointClouds(target, source, params.outputFilePrefix + "_initial.xyzrgb");
+    }
+
     // Initialize MPI variables
     int rank, size;
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
@@ -9,118 +15,164 @@ Eigen::Matrix4d ParallelICP::align(PointCloud &source, const PointCloud &target,
 
     // Root process (rank 0) holds the full transformation
     Eigen::Matrix4d transformation = Eigen::Matrix4d::Identity();
-    Eigen::Matrix4d prevTransformation = Eigen::Matrix4d::Identity();
+    Eigen::Matrix4d prevTransformation = Eigen::Matrix4d::Identity(); // Only needed on rank 0 for convergence
 
     // Create local subset of source points using shuffled distribution
-    // This improves load balancing by distributing the points randomly
     PointCloud localSource = source.shuffledSubset(rank, size);
+    PointCloud localSourceTransformed = localSource; // Keep a separate copy for transformation
 
     // Save initial state if we're the root process and output file is specified
     if (rank == 0 && !params.outputFilePrefix.empty())
     {
         std::string initialFile = params.outputFilePrefix + "_initial.xyzrgb";
-        saveColoredPointClouds(target, source, initialFile);
+        // Assuming saveColoredPointClouds exists and works as intended
+        // saveColoredPointClouds(target, source, initialFile);
     }
 
-    // Vectors to store partial sums and correspondence counts
-    std::vector<double> localPartialSums(16); // 3x3 cross-covariance matrix + 3D centroid x 2 + count
-    std::vector<double> allPartialSums;
-    std::vector<int> allCorrespondenceCounts;
+    // Vectors to store partial sums and correspondence counts for transform calculation
+    std::vector<double> localPartialSums_transform(16); // Renamed to avoid confusion
+    std::vector<double> allPartialSums_transform;
+    std::vector<int> allCorrespondenceCounts_transform;
 
     if (rank == 0)
     {
-        allPartialSums.resize(16 * size);
-        allCorrespondenceCounts.resize(size);
+        allPartialSums_transform.resize(16 * size);
+        allCorrespondenceCounts_transform.resize(size);
     }
 
-    double error = std::numeric_limits<double>::max();
-    double prevError = std::numeric_limits<double>::max();
+    double error = std::numeric_limits<double>::max();     // Error metric (MSE) - only relevant on rank 0
+    double prevError = std::numeric_limits<double>::max(); // Previous error - only relevant on rank 0
 
     // Main ICP loop
     for (int iteration = 0; iteration < params.maxIterations; ++iteration)
     {
-        // Each process finds correspondences and computes partial sums
-        int localCorrespondenceCount = 0;
-        localPartialSums = findPartialSums(localSource, target, params.outlierRejectionThreshold, localCorrespondenceCount);
+        // 1. Each process finds correspondences and computes PARTIAL SUMS FOR TRANSFORMATION
+        int localCorrespondenceCount_transform = 0; // Count for transform calculation
+        localPartialSums_transform = findPartialSums(localSourceTransformed, target, params.outlierRejectionThreshold, localCorrespondenceCount_transform);
 
-        // Gather all partial sums and correspondence counts to root process
-        MPI_Gather(localPartialSums.data(), 16, MPI_DOUBLE,
-                   allPartialSums.data(), 16, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+        // 2. Gather partial sums and counts for TRANSFORMATION to root process
+        MPI_Gather(localPartialSums_transform.data(), 16, MPI_DOUBLE,
+                   allPartialSums_transform.data(), 16, MPI_DOUBLE, 0, MPI_COMM_WORLD);
 
-        MPI_Gather(&localCorrespondenceCount, 1, MPI_INT,
-                   allCorrespondenceCounts.data(), 1, MPI_INT, 0, MPI_COMM_WORLD);
+        MPI_Gather(&localCorrespondenceCount_transform, 1, MPI_INT,
+                   allCorrespondenceCounts_transform.data(), 1, MPI_INT, 0, MPI_COMM_WORLD);
 
-        // Root process calculates transformation
+        Eigen::Matrix4d incrementalTransform = Eigen::Matrix4d::Identity(); // Initialize outside rank 0 scope
+
+        // 3. Root process calculates incremental transformation
         if (rank == 0)
         {
-            // Store previous transformation for convergence check
-            prevTransformation = transformation;
+            prevTransformation = transformation; // Store previous full transformation
 
-            // Calculate new transformation from partial sums
-            Eigen::Matrix4d incrementalTransform = calculateTransformationFromPartialSums(
-                allPartialSums, allCorrespondenceCounts, size);
+            // Calculate new incremental transformation from partial sums
+            incrementalTransform = calculateTransformationFromPartialSums(
+                allPartialSums_transform, allCorrespondenceCounts_transform, size);
 
             // Update cumulative transformation
             transformation = incrementalTransform * transformation;
-
-            // Apply transformation to the full source cloud for visualization
-            PointCloud transformedSource = source;
-            transformedSource.transform(transformation);
-
-            // Calculate error (convergence metric)
-            std::vector<std::pair<Point3D, Point3D>> dummyCorrespondences;
-            error = findCorrespondences(transformedSource, target, dummyCorrespondences, params.outlierRejectionThreshold);
-
-            // Save intermediate result if requested
-            if (!params.outputFilePrefix.empty() && iteration % params.saveInterval == 0)
-            {
-                std::string iterFile = params.outputFilePrefix + "_iter" + std::to_string(iteration) + ".xyzrgb";
-                saveColoredPointClouds(target, transformedSource, iterFile);
-            }
-
-            // Check for convergence
-            double transformDiff = (prevTransformation.inverse() * transformation - Eigen::Matrix4d::Identity()).norm();
-            if (transformDiff < params.convergenceThreshold)
-            {
-                std::cout << "Converged after " << iteration + 1 << " iterations." << std::endl;
-                break;
-            }
-
-            std::cout << "Iteration " << iteration + 1 << ", Error: " << error
-                      << ", Change: " << std::abs(prevError - error) << std::endl;
-            prevError = error;
         }
 
-        // Broadcast new transformation to all processes
+        // 4. Broadcast the NEW CUMULATIVE transformation to all processes
+        //    Note: Broadcasting the cumulative transform simplifies applying it locally
+        //    Alternatively, broadcast incremental and apply incrementally, but cumulative is often easier.
         MPI_Bcast(transformation.data(), 16, MPI_DOUBLE, 0, MPI_COMM_WORLD);
 
-        // Update local source points with the new transformation
-        localSource.transform(transformation);
-    }
+        // 5. Update local source points with the new CUMULATIVE transformation for the NEXT iteration's partial sums AND for error calculation
+        //    Apply to the original local subset to avoid accumulating errors
+        localSourceTransformed = localSource;             // Start from original local subset
+        localSourceTransformed.transform(transformation); // Apply full current transform
 
-    // Save final result if we're the root process
+        // 6. PARALLEL ERROR CALCULATION
+        PartialErrorResult localErrorResult = ParallelICP::calculatePartialErrorSum(localSourceTransformed, target, params.outlierRejectionThreshold);
+
+        // 7. Reduce partial errors and counts to root process
+        double totalErrorSum = 0.0;
+        int totalCorrespondenceCount_error = 0; // Use a separate count for error calculation
+
+        MPI_Reduce(&localErrorResult.sumSquaredError, &totalErrorSum, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
+        MPI_Reduce(&localErrorResult.numCorrespondences, &totalCorrespondenceCount_error, 1, MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD);
+
+        // 8. Root process calculates final MSE and checks convergence
+        if (rank == 0)
+        {
+            // Calculate final MSE
+            prevError = error; // Store previous error
+            error = (totalCorrespondenceCount_error > 0) ? (totalErrorSum / totalCorrespondenceCount_error) : std::numeric_limits<double>::max();
+
+            // --- Convergence Check ---
+            // Calculate difference between previous and current cumulative transformation
+            double transformDiff = (prevTransformation.inverse() * transformation - Eigen::Matrix4d::Identity()).norm();
+
+            std::cout << "Iteration " << iteration + 1 << ", Error: " << error
+                      << ", Change: " << std::abs(prevError - error)
+                      << ", Transform Diff: " << transformDiff << std::endl;
+
+            // Save intermediate result if requested (using the locally transformed full cloud is tricky now)
+            // To save intermediate results correctly, rank 0 might need the full source cloud and apply the broadcasted transform to it.
+            if (!params.outputFilePrefix.empty() && iteration % params.saveInterval == 0)
+            {
+                PointCloud transformedSourceFull = source;       // Need original full source
+                transformedSourceFull.transform(transformation); // Apply current full transform
+                std::string iterFile = params.outputFilePrefix + "_iter" + std::to_string(iteration + 1) + ".xyzrgb";
+                saveColoredPointClouds(target, transformedSourceFull, iterFile);
+            }
+
+            if (transformDiff < params.convergenceThreshold)
+            {
+                std::cout << "Converged after " << iteration + 1 << " iterations based on transform difference." << std::endl;
+                // We need a way to signal other processes to break the loop.
+                // One way is to broadcast a flag.
+                int convergence_flag = 1;
+                MPI_Bcast(&convergence_flag, 1, MPI_INT, 0, MPI_COMM_WORLD);
+                break;
+            }
+            // Optional: Check error change threshold as well
+            // if (std::abs(prevError - error) < params.errorChangeThreshold) { ... break; }
+
+            // Broadcast non-convergence flag if not breaking
+            int convergence_flag = 0;
+            MPI_Bcast(&convergence_flag, 1, MPI_INT, 0, MPI_COMM_WORLD);
+        }
+        else
+        {
+            // Worker processes check the convergence flag broadcasted by root
+            int convergence_flag = 0;
+            MPI_Bcast(&convergence_flag, 1, MPI_INT, 0, MPI_COMM_WORLD);
+            if (convergence_flag == 1)
+            {
+                break; // Exit loop if root signaled convergence
+            }
+        }
+    } // End of main ICP loop
+
+    // --- Final Saving (Rank 0) ---
     if (rank == 0 && !params.outputFilePrefix.empty())
     {
-        PointCloud transformedSource = source;
-        transformedSource.transform(transformation);
-
-        std::string finalFile = params.outputFilePrefix + "_final.xyzrgb";
-        saveColoredPointClouds(target, transformedSource, finalFile);
+        PointCloud transformedSourceFinal = source;       // Use original full source cloud
+        transformedSourceFinal.transform(transformation); // Apply final transformation
 
         // Save only the aligned source points
-        std::ofstream alignedFile(params.outputFilePrefix + "_aligned.xyz");
-        for (const auto &p : transformedSource.points)
-        {
-            alignedFile << p.x << " " << p.y << " " << p.z << " 0 255 0" << std::endl;
+        std::ofstream alignedFile(params.outputFilePrefix + "_aligned.xyzrgb");
+        if (alignedFile.is_open())
+        { // Check if file opened successfully
+            for (const auto &p : transformedSourceFinal.points)
+            {
+                // Assuming Point3D has members x, y, z
+                alignedFile << p.x << " " << p.y << " " << p.z << " 0 255 0" << std::endl;
+            }
+            alignedFile.close();
         }
-        alignedFile.close();
+        else
+        {
+            std::cerr << "Error: Could not open file " << params.outputFilePrefix + "_aligned.xyz" << " for writing." << std::endl;
+        }
     }
 
+    // Ensure all processes return the final transformation
     return transformation;
 }
 
-std::vector<double> ParallelICP::findPartialSums(const PointCloud &localSource, const PointCloud &target,
-                                                 double outlierThreshold, int &numCorrespondences)
+std::vector<double> ParallelICP::findPartialSums(const PointCloud &localSource, const PointCloud &target, double outlierThreshold, int &numCorrespondences)
 {
     // Vector to store partial sums (9 for cross-covariance, 3 for source centroid, 3 for target centroid)
     std::vector<double> partialSums(16, 0.0);
@@ -196,9 +248,7 @@ std::vector<double> ParallelICP::findPartialSums(const PointCloud &localSource, 
     return partialSums;
 }
 
-Eigen::Matrix4d ParallelICP::calculateTransformationFromPartialSums(const std::vector<double> &allPartialSums,
-                                                                    const std::vector<int> &numCorrespondences,
-                                                                    int numProcesses)
+Eigen::Matrix4d ParallelICP::calculateTransformationFromPartialSums(const std::vector<double> &allPartialSums, const std::vector<int> &numCorrespondences, int numProcesses)
 {
     // Total number of correspondences
     int totalCorrespondences = 0;
@@ -277,40 +327,48 @@ Eigen::Matrix4d ParallelICP::calculateTransformationFromPartialSums(const std::v
     return transform;
 }
 
-double ParallelICP::findCorrespondences(const PointCloud &source, const PointCloud &target, std::vector<std::pair<Point3D, Point3D>> &correspondences, double outlierThreshold)
+ParallelICP::PartialErrorResult ParallelICP::calculatePartialErrorSum(const PointCloud &localSource, const PointCloud &target, double outlierThreshold)
 {
-    correspondences.clear();
-    double totalError = 0.0;
-    int numCorrespondences = 0;
+    PartialErrorResult result;
 
-    for (const auto &sourcePoint : source.points)
+    for (const auto &sourcePoint : localSource.points)
     {
         // Find closest point in target
-        double minDist = std::numeric_limits<double>::max();
-        Point3D closestPoint;
+        double minDistSq = std::numeric_limits<double>::max(); // Use squared distance
+        Point3D closestPoint;                                  // Keep track of the actual point if needed for debugging, otherwise not strictly necessary here
 
         for (const auto &targetPoint : target.points)
         {
-            double dist = sourcePoint.distance(targetPoint);
-            if (dist < minDist)
+            // Calculate squared distance directly if possible to avoid sqrt
+            double dx = sourcePoint.x - targetPoint.x;
+            double dy = sourcePoint.y - targetPoint.y;
+            double dz = sourcePoint.z - targetPoint.z;
+            double distSq = dx * dx + dy * dy + dz * dz;
+
+            if (distSq < minDistSq)
             {
-                minDist = dist;
-                closestPoint = targetPoint;
+                minDistSq = distSq;
+                // closestPoint = targetPoint; // Assign if needed
             }
         }
 
-        // Apply outlier rejection if threshold is set
-        if (outlierThreshold > 0 && minDist > outlierThreshold)
+        // Apply outlier rejection if threshold is set (compare squared distances)
+        // Note: Ensure outlierThreshold is squared if it represents a distance
+        double outlierThresholdSq = (outlierThreshold > 0) ? outlierThreshold * outlierThreshold : -1.0;
+        if (outlierThresholdSq > 0 && minDistSq > outlierThresholdSq)
         {
             continue; // Skip this correspondence
         }
 
-        correspondences.push_back(std::make_pair(sourcePoint, closestPoint));
-        totalError += minDist * minDist;
-        numCorrespondences++;
+        // Ensure minDistSq is not infinity before adding
+        if (minDistSq != std::numeric_limits<double>::max())
+        {
+            result.sumSquaredError += minDistSq; // Add squared distance
+            result.numCorrespondences++;
+        }
     }
 
-    return (numCorrespondences > 0) ? (totalError / numCorrespondences) : std::numeric_limits<double>::max();
+    return result;
 }
 
 void ParallelICP::saveColoredPointClouds(const PointCloud &target, const PointCloud &source, const std::string &filename)

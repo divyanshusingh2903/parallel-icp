@@ -28,6 +28,13 @@ public:
                        outputFilePrefix(""), saveInterval(5) {}
     };
 
+    // Structure to hold the result of partial error calculation
+    struct PartialErrorResult
+    {
+        double sumSquaredError = 0.0;
+        int numCorrespondences = 0;
+    };
+
     /**
      * Run Parallel ICP algorithm to align source cloud with target cloud
      * @param source Source point cloud to be aligned
@@ -58,22 +65,21 @@ private:
     static Eigen::Matrix4d calculateTransformationFromPartialSums(const std::vector<double> &partialSums, const std::vector<int> &numCorrespondences, int numProcesses);
 
     /**
-     * Find closest point in target for each point in source
-     * @param source Transformed source point cloud
-     * @param target Target point cloud
-     * @param correspondences Output vector of corresponding point pairs
-     * @param outlierThreshold Threshold for rejecting outlier matches (-1 means no rejection)
-     * @return Mean squared error between corresponding points
-     */
-    static double findCorrespondences(const PointCloud &source, const PointCloud &target, std::vector<std::pair<Point3D, Point3D>> &correspondences, double outlierThreshold);
-
-    /**
      * Save point clouds to XYZ file with colors
      * @param target Target point cloud (blue)
      * @param source Source point cloud (red)
      * @param filename Output filename
      */
     static void saveColoredPointClouds(const PointCloud &target, const PointCloud &source, const std::string &filename);
+
+    /**
+     * Calculates the partial sum of squared errors for a subset of source points against a target point cloud.
+     * @param localSource Subset of source points to calculate error for (already transformed)
+     * @param target Target point cloud to find closest points in
+     * @param outlierThreshold Distance threshold for rejecting outlier correspondences
+     * @return PartialErrorResult containing the sum of squared errors and the number of correspondences
+     */
+    static PartialErrorResult calculatePartialErrorSum(const PointCloud &localSource, const PointCloud &target, double outlierThreshold);
 };
 
 #endif // PARALLEL_ICP_H
