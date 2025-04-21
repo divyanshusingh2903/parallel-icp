@@ -1,7 +1,7 @@
 #ifndef PARALLEL_ICP_H
 #define PARALLEL_ICP_H
 
-#include "pointCloud.h"
+#include "../point-cloud/pointCloud.h"
 #include <mpi.h>
 #include <Eigen/SVD>
 #include <limits>
@@ -36,11 +36,25 @@ public:
     };
 
     /**
-     * Run Parallel ICP algorithm to align source cloud with target cloud
-     * @param source Source point cloud to be aligned
-     * @param target Target point cloud (reference)
-     * @param params Algorithm parameters
-     * @return Transformation matrix that aligns source with target (valid only on root process)
+     * @brief Aligns two point clouds using the ICP algorithm, with a multi-resolution
+     *        approach.
+     *
+     * The function takes two point clouds as input, and uses a multi-resolution approach
+     * to align them. The point clouds are downsampled to a series of resolutions, and the
+     * ICP algorithm is run at each resolution level, with the transformation calculated
+     * at each level being used as the initial guess for the next level. The final
+     * transformation is then applied to the source point cloud.
+     *
+     * @param source The source point cloud to be aligned.
+     * @param target The target point cloud to which the source point cloud is to be
+     *               aligned.
+     * @param params A structure containing parameters for the ICP algorithm. These
+     *               include the maximum number of iterations, the outlier rejection
+     *               threshold, the convergence threshold, the save interval, and the
+     *               output file prefix.
+     *
+     * @return The final transformation matrix that aligns the source point cloud to the
+     *         target point cloud.
      */
     static Eigen::Matrix4d align(PointCloud &source, const PointCloud &target, const Parameters &params);
 

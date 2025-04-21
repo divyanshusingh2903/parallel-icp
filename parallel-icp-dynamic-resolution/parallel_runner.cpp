@@ -1,12 +1,14 @@
-#include "ICP.h"
-#include "pointCloud.h"
+#include "parallel_ICP.h"
+#include "../point-cloud/pointCloud.h"
+#include "../point-cloud/point3D.h"
 #include <iostream>
 #include <fstream>
 #include <sstream>
 #include <string>
 #include <vector>
 #include <iomanip>
-#include <chrono>
+#include <mpi.h>
+#include <chrono> // For timing
 
 // Function to load a point cloud from an XYZ file
 PointCloud loadXYZFile(const std::string &filename)
@@ -36,7 +38,6 @@ PointCloud loadXYZFile(const std::string &filename)
         }
     }
 
-    std::cout << "Loaded " << cloud.size() << " points from " << filename << std::endl;
     return cloud;
 }
 
@@ -47,7 +48,7 @@ void printUsage(const char *programName)
     std::cout << "\nOptions:" << std::endl;
     std::cout << "  -s  Source point cloud file (default: source.xyz)" << std::endl;
     std::cout << "  -t  Target point cloud file (default: target.xyz)" << std::endl;
-    std::cout << "  -o  Output file prefix (default: icp_result)" << std::endl;
+    std::cout << "  -o  Output file prefix (default: picp_result)" << std::endl;
     std::cout << "  -i  Maximum number of iterations (default: 6)" << std::endl;
     std::cout << "  -c  Convergence threshold (default: 1e-6)" << std::endl;
     std::cout << "  -r  Outlier rejection threshold (default: 0.1)" << std::endl;
@@ -57,19 +58,27 @@ void printUsage(const char *programName)
 
 int main(int argc, char *argv[])
 {
+    // Initialize MPI
+    MPI_Init(&argc, &argv);
+
+    int rank, size;
+    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+    MPI_Comm_size(MPI_COMM_WORLD, &size);
+
     // Default file names and parameters
     std::string sourceFile = "source.xyz";
     std::string targetFile = "target.xyz";
-    std::string outputFile = "icp_result";
+    std::string outputFile = "picp_result";
     int maxIterations = 5;
     double convergenceThreshold = 1e-6;
     double outlierThreshold = 0.1;
     int saveInterval = 1;
 
-    // Print help message if no arguments are provided
-    if (argc == 1)
+    // Only root process prints help if no arguments
+    if (rank == 0 && argc == 1)
     {
         printUsage(argv[0]);
+        MPI_Finalize();
         return 0;
     }
 
@@ -114,62 +123,94 @@ int main(int argc, char *argv[])
         }
         else if (arg == "-h" || arg == "--help")
         {
-            printUsage(argv[0]);
+            if (rank == 0)
+            {
+                printUsage(argv[0]);
+            }
+            MPI_Finalize();
             return 0;
         }
     }
 
-    // Display the parameters being used
-    std::cout << "ICP Parameters:" << std::endl;
-    std::cout << "  Source file: " << sourceFile << std::endl;
-    std::cout << "  Target file: " << targetFile << std::endl;
-    std::cout << "  Output prefix: " << outputFile << std::endl;
-    std::cout << "  Max iterations: " << maxIterations << std::endl;
-    std::cout << "  Convergence threshold: " << convergenceThreshold << std::endl;
-    std::cout << "  Outlier rejection threshold: " << outlierThreshold << std::endl;
-    std::cout << "  Save interval: " << saveInterval << std::endl;
-    std::cout << std::endl;
+    if (rank == 0)
+    {
+        std::cout << "\nRunning Parallel ICP with " << size << " processes" << std::endl;
+        std::cout << "ICP Parameters:" << std::endl;
+        std::cout << "  Source file: " << sourceFile << std::endl;
+        std::cout << "  Target file: " << targetFile << std::endl;
+        std::cout << "  Output prefix: " << outputFile << std::endl;
+        std::cout << "  Max iterations: " << maxIterations << std::endl;
+        std::cout << "  Convergence threshold: " << convergenceThreshold << std::endl;
+        std::cout << "  Outlier rejection threshold: " << outlierThreshold << std::endl;
+        std::cout << "  Save interval: " << saveInterval << std::endl;
+        std::cout << std::endl;
+    }
 
-    // Start timing
-    auto startTime = std::chrono::high_resolution_clock::now();
+    // Ensure all processes use the same parameters
+    MPI_Bcast(sourceFile.data(), sourceFile.length(), MPI_CHAR, 0, MPI_COMM_WORLD);
+    MPI_Bcast(targetFile.data(), targetFile.length(), MPI_CHAR, 0, MPI_COMM_WORLD);
+    MPI_Bcast(outputFile.data(), outputFile.length(), MPI_CHAR, 0, MPI_COMM_WORLD);
+    MPI_Bcast(&maxIterations, 1, MPI_INT, 0, MPI_COMM_WORLD);
+    MPI_Bcast(&convergenceThreshold, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+    MPI_Bcast(&outlierThreshold, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+    MPI_Bcast(&saveInterval, 1, MPI_INT, 0, MPI_COMM_WORLD);
 
-    // Load source and target point clouds
+    // All processes load point clouds
     PointCloud source = loadXYZFile(sourceFile);
     PointCloud target = loadXYZFile(targetFile);
 
+    if (rank == 0)
+    {
+        std::cout << "Loaded " << source.size() << " points from " << sourceFile << std::endl;
+        std::cout << "Loaded " << target.size() << " points from " << targetFile << std::endl;
+    }
+
     if (source.size() == 0 || target.size() == 0)
     {
-        std::cerr << "Failed to load point clouds. Exiting." << std::endl;
+        if (rank == 0)
+        {
+            std::cerr << "Failed to load point clouds. Exiting." << std::endl;
+        }
+        MPI_Finalize();
         return 1;
     }
 
-    // Set up ICP parameters
-    ICP::Parameters params;
+    // Set up parallel ICP parameters
+    ParallelICP::Parameters params;
     params.maxIterations = maxIterations;
     params.convergenceThreshold = convergenceThreshold;
     params.outlierRejectionThreshold = outlierThreshold;
     params.outputFilePrefix = outputFile;
     params.saveInterval = saveInterval;
 
-    // Run ICP algorithm - it will generate intermediate files internally
-    Eigen::Matrix4d finalTransform = ICP::align(source, target, params);
+    // Start timer
+    auto startTime = std::chrono::high_resolution_clock::now();
 
-    // End timing
+    // Run parallel ICP algorithm
+    Eigen::Matrix4d finalTransform = ParallelICP::align(source, target, params);
+
+    // Stop timer
     auto endTime = std::chrono::high_resolution_clock::now();
     std::chrono::duration<double> elapsedSeconds = endTime - startTime;
 
-    std::cout << "Final transformation matrix:" << std::endl;
-    std::cout << std::fixed << std::setprecision(6) << finalTransform << std::endl;
+    // Only the root process should report results
+    if (rank == 0)
+    {
+        std::cout << "\nFinal transformation matrix:" << std::endl;
+        std::cout << std::fixed << std::setprecision(6) << finalTransform << std::endl;
 
-    std::cout << "\nPoint cloud files saved:" << std::endl;
-    std::cout << "- Initial state: " << outputFile << "_initial.xyzrgb" << std::endl;
-    std::cout << "- Iteration files: " << outputFile << "_iter*.xyzrgb" << std::endl;
-    std::cout << "- Final aligned result: " << outputFile << "_final.xyzrgb" << std::endl;
-    std::cout << "- Aligned source only (green): " << outputFile << "_aligned.xyz" << std::endl;
-    std::cout << "\nTarget is blue, source is red, aligned source is green." << std::endl;
+        std::cout << "\nPoint cloud files saved:" << std::endl;
+        std::cout << "- Initial state: " << outputFile << "_initial.xyzrgb" << std::endl;
+        std::cout << "- Iteration files: " << outputFile << "_iter*.xyzrgb" << std::endl;
+        std::cout << "- Final aligned result: " << outputFile << "_final.xyzrgb" << std::endl;
+        std::cout << "- Aligned source only (green): " << outputFile << "_aligned.xyz" << std::endl;
+        std::cout << "\nTarget is blue, source is red, aligned source is green." << std::endl;
 
-    // Display timing information
-    std::cout << "\nExecution time: " << elapsedSeconds.count() << " seconds" << std::endl;
+        // Display timing information
+        std::cout << "\nExecution time: " << elapsedSeconds.count() << " seconds" << std::endl;
+    }
 
+    // Finalize MPI
+    MPI_Finalize();
     return 0;
 }

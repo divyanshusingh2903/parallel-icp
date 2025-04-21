@@ -1,0 +1,45 @@
+./icp_mpi_dynamic_resolution -s data/armadillo-source.xyz -t data/armadillo-target.xyz -o armadillo-mpi-dynamic-resolution
+
+Running Parallel ICP with 1 processes
+ICP Parameters:
+  Source file: data/armadillo-source.xyz
+  Target file: data/armadillo-target.xyz
+  Output prefix: armadillo-mpi-dynamic-resolution
+  Max iterations: 5
+  Convergence threshold: 1e-06
+  Outlier rejection threshold: 0.1
+  Save interval: 1
+
+Loaded 32385 points from data/armadillo-source.xyz
+Loaded 29885 points from data/armadillo-target.xyz
+
+===== Resolution Level 1/5 (5%, 1 iterations) =====
+Level 1, Iteration 1, Points: 1619, Error: 0.000234254, Transform Diff: 0.220486
+
+===== Resolution Level 2/5 (10%, 1 iterations) =====
+Level 2, Iteration 1, Points: 3238, Error: 0.000128935, Transform Diff: 0.243389
+
+===== Resolution Level 3/5 (25%, 1 iterations) =====
+Level 3, Iteration 1, Points: 8096, Error: 5.52501e-05, Transform Diff: 0.139531
+
+===== Resolution Level 4/5 (50%, 1 iterations) =====
+Level 4, Iteration 1, Points: 16192, Error: 3.34735e-05, Transform Diff: 0.0646887
+
+===== Resolution Level 5/5 (100%, 1 iterations) =====
+Level 5, Iteration 1, Points: 32385, Error: 2.35125e-05, Transform Diff: 0.028432
+
+Final transformation matrix:
+ 0.887524  0.042613 -0.458787 -0.000497
+-0.031469  0.998995  0.031911 -0.002504
+ 0.459686 -0.013884  0.887973  0.001570
+ 0.000000  0.000000  0.000000  1.000000
+
+Point cloud files saved:
+- Initial state: armadillo-mpi-dynamic-resolution_initial.xyzrgb
+- Iteration files: armadillo-mpi-dynamic-resolution_iter*.xyzrgb
+- Final aligned result: armadillo-mpi-dynamic-resolution_final.xyzrgb
+- Aligned source only (green): armadillo-mpi-dynamic-resolution_aligned.xyz
+
+Target is blue, source is red, aligned source is green.
+
+Execution time: 145.170693 seconds

@@ -4,7 +4,9 @@
 #include <vector>
 #include <Eigen/Dense>
 #include "point3D.h"
+#include <random>
 
+// Point cloud class
 struct PointCloud
 {
     std::vector<Point3D> points;
@@ -23,6 +25,9 @@ struct PointCloud
 
     // Apply transformation to all points
     void transform(const Eigen::Matrix4d &transformMatrix);
+
+    // Downsample method to the PointCloud class
+    PointCloud downsample(double rate) const;
 };
 
 #endif // POINTCLOUD_H

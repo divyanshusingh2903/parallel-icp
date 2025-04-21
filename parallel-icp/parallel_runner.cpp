@@ -1,13 +1,13 @@
 #include "parallel_ICP.h"
-#include "pointCloud.h"
-#include "point3D.h"
+#include "../point-cloud/pointCloud.h"
+#include "../point-cloud/point3D.h"
 #include <iostream>
 #include <fstream>
 #include <sstream>
 #include <string>
 #include <vector>
 #include <iomanip>
-#include <mpi.h>  // Include MPI header
+#include <mpi.h>
 #include <chrono> // For timing
 
 // Function to load a point cloud from an XYZ file

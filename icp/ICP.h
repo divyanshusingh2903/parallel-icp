@@ -2,7 +2,7 @@
 #ifndef ICP_H
 #define ICP_H
 
-#include "pointCloud.h"
+#include "../point-cloud/pointCloud.h"
 #include <Eigen/SVD>
 #include <limits>
 #include <iostream>
