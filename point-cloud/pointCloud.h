@@ -26,7 +26,7 @@ struct PointCloud
     // Apply transformation to all points
     void transform(const Eigen::Matrix4d &transformMatrix);
 
-    // Downsample method to the PointCloud class
+    // Downsample the point cloud by a given rate
     PointCloud downsample(double rate) const;
 };
 

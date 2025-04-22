@@ -1,0 +1,36 @@
+./icp_mpi_spatial_structure -s data/armadillo-source.xyz -t data/armadillo-target.xyz -o armadillo-mpi-spatial-structures
+
+Running Parallel ICP with 1 processes
+ICP Parameters:
+  Source file: data/armadillo-source.xyz
+  Target file: data/armadillo-target.xyz
+  Output prefix: armadillo-mpi-spatial-structures
+  Max iterations: 5
+  Convergence threshold: 1e-06
+  Outlier rejection threshold: 0.1
+  Save interval: 1
+
+Loaded 32385 points from data/armadillo-source.xyz
+Loaded 29885 points from data/armadillo-target.xyz
+KD-tree built with 29885 points.
+Iteration 1, Error: 0.000217401, Change: 1.79769e+308, Transform Diff: 0.233558
+Iteration 2, Error: 0.000112002, Change: 0.000105398, Transform Diff: 0.23169
+Iteration 3, Error: 5.2342e-05, Change: 5.96604e-05, Transform Diff: 0.133633
+Iteration 4, Error: 3.31769e-05, Change: 1.9165e-05, Transform Diff: 0.0618036
+Iteration 5, Error: 2.35401e-05, Change: 9.6368e-06, Transform Diff: 0.0280451
+
+Final transformation matrix:
+ 0.889025  0.038425 -0.456244  0.000010
+-0.028021  0.999170  0.029549 -0.002182
+ 0.457001 -0.013486  0.889364  0.001421
+ 0.000000  0.000000  0.000000  1.000000
+
+Point cloud files saved:
+- Initial state: armadillo-mpi-spatial-structures_initial.xyzrgb
+- Iteration files: armadillo-mpi-spatial-structures_iter*.xyzrgb
+- Final aligned result: armadillo-mpi-spatial-structures_final.xyzrgb
+- Aligned source only (green): armadillo-mpi-spatial-structures_aligned.xyz
+
+Target is blue, source is red, aligned source is green.
+
+Execution time: 70.721902 seconds
