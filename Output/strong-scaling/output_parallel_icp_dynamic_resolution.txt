@@ -1,0 +1,204 @@
+ning Parallel ICP with 16 processes
+ICP Parameters:
+  Source file: ./data/happy-80000-source.xyz
+  Target file: ./data/happy-80000-target.xyz
+  Output prefix: v80000p16
+  Max iterations: 10
+  Convergence threshold: 1e-06
+  Outlier rejection threshold: 0.1
+  Save interval: 1
+
+Loaded 85036 points from ./data/happy-80000-source.xyz
+Loaded 80617 points from ./data/happy-80000-target.xyz
+
+===== Resolution Level 1/5 (5%, 2 iterations) =====
+Level 1, Iteration 1, Points: 4251, Error: 4.81654e-05, Transform Diff: 0.103916
+Level 1, Iteration 2, Points: 4251, Error: 4.32402e-05, Transform Diff: 0.0757293
+
+===== Resolution Level 2/5 (10%, 2 iterations) =====
+Level 2, Iteration 1, Points: 8503, Error: 3.67144e-05, Transform Diff: 0.0658136
+Level 2, Iteration 2, Points: 8503, Error: 3.30422e-05, Transform Diff: 0.0521691
+
+===== Resolution Level 3/5 (25%, 2 iterations) =====
+Level 3, Iteration 1, Points: 21259, Error: 2.83731e-05, Transform Diff: 0.038918
+Level 3, Iteration 2, Points: 21259, Error: 2.60511e-05, Transform Diff: 0.0354317
+
+===== Resolution Level 4/5 (50%, 2 iterations) =====
+Level 4, Iteration 1, Points: 42518, Error: 2.38871e-05, Transform Diff: 0.0336175
+Level 4, Iteration 2, Points: 42518, Error: 2.21859e-05, Transform Diff: 0.0315036
+
+===== Resolution Level 5/5 (100%, 2 iterations) =====
+Level 5, Iteration 1, Points: 85036, Error: 2.02734e-05, Transform Diff: 0.0303247
+Level 5, Iteration 2, Points: 85036, Error: 1.90207e-05, Transform Diff: 0.0294879
+
+Final transformation matrix:
+ 0.939483 -0.032440 -0.341055  0.005381
+ 0.040417  0.999050  0.016307 -0.001676
+ 0.340202 -0.029104  0.939902  0.003612
+ 0.000000  0.000000  0.000000  1.000000
+
+Point cloud files saved:
+- Initial state: v80000p16_initial.xyzrgb
+- Iteration files: v80000p16_iter*.xyzrgb
+- Final aligned result: v80000p16_final.xyzrgb
+- Aligned source only (green): v80000p16_aligned.xyz
+
+Target is blue, source is red, aligned source is green.
+
+Execution time: 234.630486 seconds
+
+-------------------------------------------------------------------------------------------------------------------------------
+mpirun -np 8 --oversubscribe icp_mpi_dynamic_resolution -s ./data/happy-80000-source.xyz -t ./data/happy-80000-target.xyz -o v80000p8 -i 10
+
+Running Parallel ICP with 8 processes
+ICP Parameters:
+  Source file: ./data/happy-80000-source.xyz
+  Target file: ./data/happy-80000-target.xyz
+  Output prefix: v80000p8
+  Max iterations: 10
+  Convergence threshold: 1e-06
+  Outlier rejection threshold: 0.1
+  Save interval: 1
+
+Loaded 85036 points from ./data/happy-80000-source.xyz
+Loaded 80617 points from ./data/happy-80000-target.xyz
+
+===== Resolution Level 1/5 (5%, 2 iterations) =====
+Level 1, Iteration 1, Points: 4251, Error: 4.81654e-05, Transform Diff: 0.103916
+Level 1, Iteration 2, Points: 4251, Error: 4.32402e-05, Transform Diff: 0.0757293
+
+===== Resolution Level 2/5 (10%, 2 iterations) =====
+Level 2, Iteration 1, Points: 8503, Error: 3.67144e-05, Transform Diff: 0.0658136
+Level 2, Iteration 2, Points: 8503, Error: 3.30422e-05, Transform Diff: 0.0521691
+
+===== Resolution Level 3/5 (25%, 2 iterations) =====
+Level 3, Iteration 1, Points: 21259, Error: 2.83731e-05, Transform Diff: 0.038918
+Level 3, Iteration 2, Points: 21259, Error: 2.60511e-05, Transform Diff: 0.0354317
+
+===== Resolution Level 4/5 (50%, 2 iterations) =====
+Level 4, Iteration 1, Points: 42518, Error: 2.38871e-05, Transform Diff: 0.0336175
+Level 4, Iteration 2, Points: 42518, Error: 2.21859e-05, Transform Diff: 0.0315036
+
+===== Resolution Level 5/5 (100%, 2 iterations) =====
+Level 5, Iteration 1, Points: 85036, Error: 2.02734e-05, Transform Diff: 0.0303247
+Level 5, Iteration 2, Points: 85036, Error: 1.90207e-05, Transform Diff: 0.0294879
+
+Final transformation matrix:
+ 0.939483 -0.032440 -0.341055  0.005381
+ 0.040417  0.999050  0.016307 -0.001676
+ 0.340202 -0.029104  0.939902  0.003612
+ 0.000000  0.000000  0.000000  1.000000
+
+Point cloud files saved:
+- Initial state: v80000p8_initial.xyzrgb
+- Iteration files: v80000p8_iter*.xyzrgb
+- Final aligned result: v80000p8_final.xyzrgb
+- Aligned source only (green): v80000p8_aligned.xyz
+
+Target is blue, source is red, aligned source is green.
+
+Execution time: 278.795710 seconds
+
+-------------------------------------------------------------------------------------------------------------------------------
+mpirun -np 4 --oversubscribe icp_mpi_dynamic_resolution -s ./data/happy-80000-source.xyz -t ./data/happy-80000-target.xyz -o v80000p4 -i 10
+
+Running Parallel ICP with 4 processes
+ICP Parameters:
+  Source file: ./data/happy-80000-source.xyz
+  Target file: ./data/happy-80000-target.xyz
+  Output prefix: v80000p4
+  Max iterations: 10
+  Convergence threshold: 1e-06
+  Outlier rejection threshold: 0.1
+  Save interval: 1
+
+Loaded 85036 points from ./data/happy-80000-source.xyz
+Loaded 80617 points from ./data/happy-80000-target.xyz
+
+===== Resolution Level 1/5 (5%, 2 iterations) =====
+Level 1, Iteration 1, Points: 4251, Error: 4.81654e-05, Transform Diff: 0.103916
+Level 1, Iteration 2, Points: 4251, Error: 4.32402e-05, Transform Diff: 0.0757293
+
+===== Resolution Level 2/5 (10%, 2 iterations) =====
+Level 2, Iteration 1, Points: 8503, Error: 3.67144e-05, Transform Diff: 0.0658136
+Level 2, Iteration 2, Points: 8503, Error: 3.30422e-05, Transform Diff: 0.0521691
+
+===== Resolution Level 3/5 (25%, 2 iterations) =====
+Level 3, Iteration 1, Points: 21259, Error: 2.83731e-05, Transform Diff: 0.038918
+Level 3, Iteration 2, Points: 21259, Error: 2.60511e-05, Transform Diff: 0.0354317
+
+===== Resolution Level 4/5 (50%, 2 iterations) =====
+Level 4, Iteration 1, Points: 42518, Error: 2.38871e-05, Transform Diff: 0.0336175
+Level 4, Iteration 2, Points: 42518, Error: 2.21859e-05, Transform Diff: 0.0315036
+
+===== Resolution Level 5/5 (100%, 2 iterations) =====
+Level 5, Iteration 1, Points: 85036, Error: 2.02734e-05, Transform Diff: 0.0303247
+Level 5, Iteration 2, Points: 85036, Error: 1.90207e-05, Transform Diff: 0.0294879
+
+Final transformation matrix:
+ 0.939483 -0.032440 -0.341055  0.005381
+ 0.040417  0.999050  0.016307 -0.001676
+ 0.340202 -0.029104  0.939902  0.003612
+ 0.000000  0.000000  0.000000  1.000000
+
+Point cloud files saved:
+- Initial state: v80000p4_initial.xyzrgb
+- Iteration files: v80000p4_iter*.xyzrgb
+- Final aligned result: v80000p4_final.xyzrgb
+- Aligned source only (green): v80000p4_aligned.xyz
+
+Target is blue, source is red, aligned source is green.
+
+Execution time: 455.621219 seconds
+
+-------------------------------------------------------------------------------------------------------------------------------
+mpirun -np 2 --oversubscribe icp_mpi_dynamic_resolution -s ./data/happy-80000-source.xyz -t ./data/happy-80000-target.xyz -o v80000p2 -i 10
+
+Running Parallel ICP with 2 processes
+ICP Parameters:
+  Source file: ./data/happy-80000-source.xyz
+  Target file: ./data/happy-80000-target.xyz
+  Output prefix: v80000p2
+  Max iterations: 10
+  Convergence threshold: 1e-06
+  Outlier rejection threshold: 0.1
+  Save interval: 1
+
+Loaded 85036 points from ./data/happy-80000-source.xyz
+Loaded 80617 points from ./data/happy-80000-target.xyz
+
+===== Resolution Level 1/5 (5%, 2 iterations) =====
+Level 1, Iteration 1, Points: 4251, Error: 4.81654e-05, Transform Diff: 0.103916
+Level 1, Iteration 2, Points: 4251, Error: 4.32402e-05, Transform Diff: 0.0757293
+
+===== Resolution Level 2/5 (10%, 2 iterations) =====
+Level 2, Iteration 1, Points: 8503, Error: 3.67144e-05, Transform Diff: 0.0658136
+Level 2, Iteration 2, Points: 8503, Error: 3.30422e-05, Transform Diff: 0.0521691
+
+===== Resolution Level 3/5 (25%, 2 iterations) =====
+Level 3, Iteration 1, Points: 21259, Error: 2.83731e-05, Transform Diff: 0.038918
+Level 3, Iteration 2, Points: 21259, Error: 2.60511e-05, Transform Diff: 0.0354317
+
+===== Resolution Level 4/5 (50%, 2 iterations) =====
+Level 4, Iteration 1, Points: 42518, Error: 2.38871e-05, Transform Diff: 0.0336175
+Level 4, Iteration 2, Points: 42518, Error: 2.21859e-05, Transform Diff: 0.0315036
+
+===== Resolution Level 5/5 (100%, 2 iterations) =====
+Level 5, Iteration 1, Points: 85036, Error: 2.02734e-05, Transform Diff: 0.0303247
+Level 5, Iteration 2, Points: 85036, Error: 1.90207e-05, Transform Diff: 0.0294879
+
+Final transformation matrix:
+ 0.939483 -0.032440 -0.341055  0.005381
+ 0.040417  0.999050  0.016307 -0.001676
+ 0.340202 -0.029104  0.939902  0.003612
+ 0.000000  0.000000  0.000000  1.000000
+
+Point cloud files saved:
+- Initial state: v80000p2_initial.xyzrgb
+- Iteration files: v80000p2_iter*.xyzrgb
+- Final aligned result: v80000p2_final.xyzrgb
+- Aligned source only (green): v80000p2_aligned.xyz
+
+Target is blue, source is red, aligned source is green.
+
+Execution time: 784.717621 seconds

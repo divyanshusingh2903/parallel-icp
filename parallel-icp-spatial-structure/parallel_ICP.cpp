@@ -126,10 +126,10 @@ Eigen::Matrix4d ParallelICP::align(PointCloud &source, const PointCloud &target,
             // Save intermediate result if requested
             if (!params.outputFilePrefix.empty() && iteration % params.saveInterval == 0)
             {
-                PointCloud transformedSourceFull = source;       // Need original full source
-                transformedSourceFull.transform(transformation); // Apply current full transform
-                std::string iterFile = params.outputFilePrefix + "_iter" + std::to_string(iteration + 1) + ".xyzrgb";
-                saveColoredPointClouds(target, transformedSourceFull, iterFile);
+                // PointCloud transformedSourceFull = source;       // Need original full source
+                // transformedSourceFull.transform(transformation); // Apply current full transform
+                // std::string iterFile = params.outputFilePrefix + "_iter" + std::to_string(iteration + 1) + ".xyzrgb";
+                // saveColoredPointClouds(target, transformedSourceFull, iterFile);
             }
 
             if (transformDiff < params.convergenceThreshold)

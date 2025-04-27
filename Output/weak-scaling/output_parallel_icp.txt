@@ -1,0 +1,166 @@
+mpirun -np 16 --oversubscribe icp_mpi -s ./data/happy-160000-source.xyz -t ./data/happy-160000-target.xyz -o v160000p16 -i 10
+
+Running Parallel ICP with 16 processes
+ICP Parameters:
+  Source file: ./data/happy-160000-source.xyz
+  Target file: ./data/happy-160000-target.xyz
+  Output prefix: v160000p16
+  Max iterations: 10
+  Convergence threshold: 1e-06
+  Outlier rejection threshold: 0.1
+  Save interval: 1
+
+Loaded 153638 points from ./data/happy-160000-source.xyz
+Loaded 163248 points from ./data/happy-160000-target.xyz
+Iteration 1, Error: 9.2228e-05, Change: 1.79769e+308, Transform Diff: 0.16942
+Iteration 2, Error: 5.96362e-05, Change: 3.25918e-05, Transform Diff: 0.0891865
+Iteration 3, Error: 4.64421e-05, Change: 1.31941e-05, Transform Diff: 0.0658166
+Iteration 4, Error: 4.02319e-05, Change: 6.21027e-06, Transform Diff: 0.0508577
+Iteration 5, Error: 3.64967e-05, Change: 3.73512e-06, Transform Diff: 0.0482281
+Iteration 6, Error: 3.40901e-05, Change: 2.40661e-06, Transform Diff: 0.0407324
+Iteration 7, Error: 3.23526e-05, Change: 1.73755e-06, Transform Diff: 0.0345964
+Iteration 8, Error: 3.10599e-05, Change: 1.29266e-06, Transform Diff: 0.0292146
+Iteration 9, Error: 3.0121e-05, Change: 9.38927e-07, Transform Diff: 0.0240601
+Iteration 10, Error: 2.94406e-05, Change: 6.80404e-07, Transform Diff: 0.0195719
+
+Final transformation matrix:
+ 0.926976 -0.030328  0.373894  0.011481
+ 0.054114  0.997112 -0.053281 -0.003542
+-0.371198  0.069623  0.925940  0.008524
+ 0.000000  0.000000  0.000000  1.000000
+
+Point cloud files saved:
+- Initial state: v160000p16_initial.xyzrgb
+- Iteration files: v160000p16_iter*.xyzrgb
+- Final aligned result: v160000p16_final.xyzrgb
+- Aligned source only (green): v160000p16_aligned.xyz
+
+Target is blue, source is red, aligned source is green.
+
+Execution time: 2638.772525 seconds
+
+-------------------------------------------------------------------------------------------------------------------------------
+mpirun -np 8 icp_mpi -s ./data/happy-80000-source.xyz -t ./data/happy-80000-target.xyz -o v80000p8 -i 10
+
+Running Parallel ICP with 8 processes
+ICP Parameters:
+  Source file: ./data/happy-80000-source.xyz
+  Target file: ./data/happy-80000-target.xyz
+  Output prefix: v80000p8
+  Max iterations: 10
+  Convergence threshold: 1e-06
+  Outlier rejection threshold: 0.1
+  Save interval: 1
+
+Loaded 85036 points from ./data/happy-80000-source.xyz
+Loaded 80617 points from ./data/happy-80000-target.xyz
+Iteration 1, Error: 4.26205e-05, Change: 1.79769e+308, Transform Diff: 0.0966108
+Iteration 2, Error: 3.86845e-05, Change: 3.93605e-06, Transform Diff: 0.0702054
+Iteration 3, Error: 3.51406e-05, Change: 3.54393e-06, Transform Diff: 0.057548
+Iteration 4, Error: 3.17752e-05, Change: 3.36536e-06, Transform Diff: 0.0503401
+Iteration 5, Error: 2.87707e-05, Change: 3.00451e-06, Transform Diff: 0.0444454
+Iteration 6, Error: 2.62108e-05, Change: 2.55987e-06, Transform Diff: 0.0385607
+Iteration 7, Error: 2.40511e-05, Change: 2.15973e-06, Transform Diff: 0.0355118
+Iteration 8, Error: 2.22646e-05, Change: 1.78649e-06, Transform Diff: 0.0321388
+Iteration 9, Error: 2.07484e-05, Change: 1.51624e-06, Transform Diff: 0.0309413
+Iteration 10, Error: 1.94348e-05, Change: 1.3136e-06, Transform Diff: 0.0298439
+
+Final transformation matrix:
+ 0.941961 -0.032127 -0.334180  0.005350
+ 0.040023  0.999058  0.016768 -0.001669
+ 0.333327 -0.029169  0.942360  0.003598
+ 0.000000  0.000000  0.000000  1.000000
+
+Point cloud files saved:
+- Initial state: v80000p8_initial.xyzrgb
+- Iteration files: v80000p8_iter*.xyzrgb
+- Final aligned result: v80000p8_final.xyzrgb
+- Aligned source only (green): v80000p8_aligned.xyz
+
+Target is blue, source is red, aligned source is green.
+
+Execution time: 921.718592 seconds
+
+-------------------------------------------------------------------------------------------------------------------------------
+mpirun -np 4 icp_mpi -s ./data/bunny-40000-source.xyz -t ./data/bunny-40000-target.xyz -o v40000p4 -i 10
+
+Running Parallel ICP with 4 processes
+ICP Parameters:
+  Source file: ./data/bunny-40000-source.xyz
+  Target file: ./data/bunny-40000-target.xyz
+  Output prefix: v40000p4
+  Max iterations: 10
+  Convergence threshold: 1e-06
+  Outlier rejection threshold: 0.1
+  Save interval: 1
+
+Loaded 40097 points from ./data/bunny-40000-source.xyz
+Loaded 40256 points from ./data/bunny-40000-target.xyz
+Iteration 1, Error: 0.000184705, Change: 1.79769e+308, Transform Diff: 0.500694
+Iteration 2, Error: 4.6456e-05, Change: 0.000138249, Transform Diff: 0.192482
+Iteration 3, Error: 1.88575e-05, Change: 2.75985e-05, Transform Diff: 0.097886
+Iteration 4, Error: 1.23112e-05, Change: 6.54626e-06, Transform Diff: 0.0390122
+Iteration 5, Error: 9.43549e-06, Change: 2.87573e-06, Transform Diff: 0.0239858
+Iteration 6, Error: 7.72425e-06, Change: 1.71125e-06, Transform Diff: 0.0193312
+Iteration 7, Error: 6.61551e-06, Change: 1.10873e-06, Transform Diff: 0.0160201
+Iteration 8, Error: 5.86252e-06, Change: 7.52997e-07, Transform Diff: 0.0136339
+Iteration 9, Error: 5.34746e-06, Change: 5.15061e-07, Transform Diff: 0.011439
+Iteration 10, Error: 4.98192e-06, Change: 3.65533e-07, Transform Diff: 0.00982754
+
+Final transformation matrix:
+ 0.845950  0.030825  0.532371 -0.055092
+-0.035224  0.999378 -0.001894 -0.000300
+-0.532098 -0.017150  0.846509 -0.010850
+ 0.000000  0.000000  0.000000  1.000000
+
+Point cloud files saved:
+- Initial state: v40000p4_initial.xyzrgb
+- Iteration files: v40000p4_iter*.xyzrgb
+- Final aligned result: v40000p4_final.xyzrgb
+- Aligned source only (green): v40000p4_aligned.xyz
+
+Target is blue, source is red, aligned source is green.
+
+Execution time: 375.279382 seconds
+
+-------------------------------------------------------------------------------------------------------------------------------
+mpirun -np 2 icp_mpi -s ./data/dragon-20000-source.xyz -t ./data/dragon-20000-target.xyz -o v20000p2 -i 10
+
+Running Parallel ICP with 2 processes
+ICP Parameters:
+  Source file: ./data/dragon-20000-source.xyz
+  Target file: ./data/dragon-20000-target.xyz
+  Output prefix: v20000p2
+  Max iterations: 10
+  Convergence threshold: 1e-06
+  Outlier rejection threshold: 0.1
+  Save interval: 1
+
+Loaded 24573 points from ./data/dragon-20000-source.xyz
+Loaded 19318 points from ./data/dragon-20000-target.xyz
+Iteration 1, Error: 0.00121506, Change: 1.79769e+308, Transform Diff: 0.375874
+Iteration 2, Error: 0.000926516, Change: 0.000288546, Transform Diff: 0.374716
+Iteration 3, Error: 0.000353252, Change: 0.000573264, Transform Diff: 0.539047
+Iteration 4, Error: 0.000194847, Change: 0.000158405, Transform Diff: 0.312854
+Iteration 5, Error: 0.000170893, Change: 2.39534e-05, Transform Diff: 0.110949
+Iteration 6, Error: 0.000159043, Change: 1.18503e-05, Transform Diff: 0.0718272
+Iteration 7, Error: 0.000148118, Change: 1.09253e-05, Transform Diff: 0.0664261
+Iteration 8, Error: 0.000139869, Change: 8.2486e-06, Transform Diff: 0.053674
+Iteration 9, Error: 0.000133933, Change: 5.93618e-06, Transform Diff: 0.0440986
+Iteration 10, Error: 0.000129678, Change: 4.25533e-06, Transform Diff: 0.0344541
+
+Final transformation matrix:
+ 0.474547  0.199198  0.857395 -0.050968
+-0.334879  0.941668 -0.033430  0.003027
+-0.814040 -0.271260  0.513573  0.051914
+ 0.000000  0.000000  0.000000  1.000000
+
+Point cloud files saved:
+- Initial state: v20000p2_initial.xyzrgb
+- Iteration files: v20000p2_iter*.xyzrgb
+- Final aligned result: v20000p2_final.xyzrgb
+- Aligned source only (green): v20000p2_aligned.xyz
+
+Target is blue, source is red, aligned source is green.
+
+Execution time: 232.991972 seconds
