@@ -113,7 +113,7 @@ As the number of processors increases for a fixed problem size, the runtime shou
 
 - MPI implementation (e.g., OpenMPI, MPICH)
 - C++ compiler with C++11 support
-- CMake (optional, for building)
+- Eigen 3.4.0 library (for matrix operations)
 
 ### Building
 
@@ -122,8 +122,20 @@ As the number of processors increases for a fixed problem size, the runtime shou
 git clone https://github.com/yourusername/parallel-icp.git
 cd parallel-icp
 
-# Build the executables
-make
+# Build the standard parallel ICP executable
+mpic++ ./point-cloud/* ./parallel-icp/* -I/path/to/eigen-3.4.0 -o executables/icp_mpi
+
+# Build the dynamic resolution ICP executable
+mpic++ ./point-cloud/* ./parallel-icp-dynamic-resolution/* -I/path/to/eigen-3.4.0 -o executables/icp_mpi_dynamic_resolution
+
+# Build the spatial structure ICP executable
+mpic++ ./point-cloud/* ./parallel-icp-spatial-structure/* -I/path/to/eigen-3.4.0 -o executables/icp_mpi_spatial_structure
+
+# Build the single threaded version
+g++ ./point-cloud/* ./icp/* -I/path/to/eigen-3.4.0 -o executables/icp_single_thread
+```
+
+You may need to adjust the path to your Eigen installation accordingly.
 ```
 
 ### Running the Examples
@@ -142,7 +154,7 @@ mpirun -np 8 ./executables/icp_mpi_dynamic_resolution data/bunny-40000-source.xy
 ### Converting Output to PLY Format
 
 ```bash
-python xyzrgb_to_ply.py input_file.xyzrgb output_file.ply
+python xyzrgb_to_ply.py ./path/to/.xyzrgb files
 ```
 
 ## References
